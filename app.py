@@ -205,7 +205,8 @@ class CTSTLEditor(QMainWindow):
         w.SetPlaceFactor(1.0)
         w.SetInputData(self.original_polydata)
         w.PlaceWidget()
-        w.AddObserver('InteractionEvent', lambda o, e: self.update_clip(plane))
+        w.GetPlane(plane)
+        w.AddObserver('InteractionEvent', lambda o, e: self.update_clip(o, plane))
         w.On()
         # Attach the clipping plane to the mapper so rendering reflects its
         # position without modifying the input polydata
@@ -228,10 +229,9 @@ class CTSTLEditor(QMainWindow):
             self.apply_clip.setEnabled(False)
             self.vtk_widget.GetRenderWindow().Render()
 
-    def update_clip(self, plane):
-        """Redraw the scene after the clipping plane has moved."""
-        # The mapper already has the plane registered as a clipping plane; we
-        # only need to trigger a render so the updated plane takes effect.
+    def update_clip(self, widget, plane):
+        """Update *plane* from *widget* and redraw the scene."""
+        widget.GetPlane(plane)
         self.vtk_widget.GetRenderWindow().Render()
 
     def apply_clipping(self):
