@@ -55,7 +55,7 @@ class CTSTLEditor(QMainWindow):
         ori_layout.addWidget(QLabel("Orientación:"))
         self.orient_cb = QComboBox()
         self.orient_cb.addItems(["Axial","Coronal","Sagital"])
-        self.orient_cb.currentIndexChanged.connect(self.update_image)
+        self.orient_cb.currentIndexChanged.connect(self.change_orientation)
         ori_layout.addWidget(self.orient_cb)
         ctrl_layout.addLayout(ori_layout)
         # Slice slider
@@ -149,6 +149,14 @@ class CTSTLEditor(QMainWindow):
         self.wc_slider.setRange(int(vmin),int(vmax)); self.wc_slider.setValue(int(center))
         self.ww_slider.setRange(1,int(width)); self.ww_slider.setValue(int(width))
         self.thr_slider.setRange(int(vmin),int(vmax)); self.thr_slider.setValue(int(center))
+        self.update_image()
+
+    def change_orientation(self, index):
+        """Update viewing axis when orientation combo is changed."""
+        self.axis = index
+        if self.volume is not None:
+            self.slice_slider.setRange(0, self.volume.shape[self.axis]-1)
+            self.slice_slider.setValue(self.volume.shape[self.axis]//2)
         self.update_image()
 
     def update_image(self):
