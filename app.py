@@ -207,6 +207,9 @@ class CTSTLEditor(QMainWindow):
         w.PlaceWidget()
         w.AddObserver('InteractionEvent', lambda o, e: self.update_clip(plane))
         w.On()
+        # Attach the clipping plane to the mapper so rendering reflects its
+        # position without modifying the input polydata
+        self.mapper.AddClippingPlane(plane)
         return w
 
     def toggle_clip_plane(self):
@@ -219,26 +222,34 @@ class CTSTLEditor(QMainWindow):
             if self.plane_widget:
                 self.plane_widget.Off()
                 self.plane_widget = None
+            # Remove the plane from the mapper so the mesh is shown uncut
+            self.mapper.RemoveAllClippingPlanes()
             self.clipping_active = False
             self.apply_clip.setEnabled(False)
+            self.vtk_widget.GetRenderWindow().Render()
 
     def update_clip(self, plane):
-        clip = vtk.vtkClipPolyData()
-        clip.SetInputData(self.original_polydata)
-        clip.SetClipFunction(plane)
-        clip.Update()
-        self.mapper.SetInputData(clip.GetOutput())
+        """Redraw the scene after the clipping plane has moved."""
+        # The mapper already has the plane registered as a clipping plane; we
+        # only need to trigger a render so the updated plane takes effect.
         self.vtk_widget.GetRenderWindow().Render()
 
     def apply_clipping(self):
-        self.clipped_polydata = vtk.vtkPolyData()
-        self.clipped_polydata.DeepCopy(self.mapper.GetInput())
-        self.original_polydata = self.clipped_polydata
+        """Permanently apply the current clipping plane to the mesh."""
+        clip = vtk.vtkClipPolyData()
+        clip.SetInputData(self.original_polydata)
+        clip.SetClipFunction(self.plane1)
+        clip.Update()
+        self.original_polydata = clip.GetOutput()
+        self.mapper.SetInputData(self.original_polydata)
+        # Remove widget and associated clipping plane from the mapper
         if self.plane_widget:
             self.plane_widget.Off()
             self.plane_widget = None
+        self.mapper.RemoveAllClippingPlanes()
         self.apply_clip.setEnabled(False)
         self.clipping_active = False
+        self.vtk_widget.GetRenderWindow().Render()
 
     def toggle_dual_planes(self):
         if not hasattr(self,'actor'): return
@@ -256,7 +267,8 @@ class CTSTLEditor(QMainWindow):
                 self.plane_widget2 = None
             self.dual_mode = False
             self.delete_between.setEnabled(False)
-            self.mapper.SetInputData(self.original_polydata)
+            # Remove planes from the mapper so clipping is disabled
+            self.mapper.RemoveAllClippingPlanes()
             self.vtk_widget.GetRenderWindow().Render()
 
     def delete_between_planes(self):
@@ -281,6 +293,8 @@ class CTSTLEditor(QMainWindow):
         if self.plane_widget2:
             self.plane_widget2.Off()
             self.plane_widget2 = None
+        # Clear all clipping planes since the geometry now contains the result
+        self.mapper.RemoveAllClippingPlanes()
         self.dual_mode = False
         self.delete_between.setEnabled(False)
         self.vtk_widget.GetRenderWindow().Render()
