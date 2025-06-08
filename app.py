@@ -198,24 +198,29 @@ class CTSTLEditor(QMainWindow):
         self.renderer.AddActor(self.actor); self.renderer.ResetCamera()
         self.vtk_widget.GetRenderWindow().Render()
 
-    def create_plane_widget(self, plane, widget_list):
+    def create_plane_widget(self, plane):
+        """Create an implicit plane widget bound to *plane* and return it."""
         w = vtk.vtkImplicitPlaneWidget()
         w.SetInteractor(self.interactor)
         w.SetPlaceFactor(1.0)
         w.SetInputData(self.original_polydata)
         w.PlaceWidget()
-        w.AddObserver('InteractionEvent', lambda o,e: self.update_clip(plane))
+        w.AddObserver('InteractionEvent', lambda o, e: self.update_clip(plane))
         w.On()
-        widget_list.append(w)
+        return w
 
     def toggle_clip_plane(self):
         if not hasattr(self,'actor'): return
         if not self.clipping_active:
-            self.create_plane_widget(self.plane1, [self.plane_widget])
-            self.clipping_active = True; self.apply_clip.setEnabled(True)
+            self.plane_widget = self.create_plane_widget(self.plane1)
+            self.clipping_active = True
+            self.apply_clip.setEnabled(True)
         else:
-            if self.plane_widget: self.plane_widget.Off()
-            self.clipping_active = False; self.apply_clip.setEnabled(False)
+            if self.plane_widget:
+                self.plane_widget.Off()
+                self.plane_widget = None
+            self.clipping_active = False
+            self.apply_clip.setEnabled(False)
 
     def update_clip(self, plane):
         clip = vtk.vtkClipPolyData()
@@ -229,20 +234,28 @@ class CTSTLEditor(QMainWindow):
         self.clipped_polydata = vtk.vtkPolyData()
         self.clipped_polydata.DeepCopy(self.mapper.GetInput())
         self.original_polydata = self.clipped_polydata
-        if self.plane_widget: self.plane_widget.Off()
+        if self.plane_widget:
+            self.plane_widget.Off()
+            self.plane_widget = None
         self.apply_clip.setEnabled(False)
         self.clipping_active = False
 
     def toggle_dual_planes(self):
         if not hasattr(self,'actor'): return
         if not self.dual_mode:
-            self.create_plane_widget(self.plane1, [self.plane_widget])
-            self.create_plane_widget(self.plane2, [self.plane_widget2])
-            self.dual_mode = True; self.delete_between.setEnabled(True)
+            self.plane_widget = self.create_plane_widget(self.plane1)
+            self.plane_widget2 = self.create_plane_widget(self.plane2)
+            self.dual_mode = True
+            self.delete_between.setEnabled(True)
         else:
-            if self.plane_widget: self.plane_widget.Off()
-            if self.plane_widget2: self.plane_widget2.Off()
-            self.dual_mode = False; self.delete_between.setEnabled(False)
+            if self.plane_widget:
+                self.plane_widget.Off()
+                self.plane_widget = None
+            if self.plane_widget2:
+                self.plane_widget2.Off()
+                self.plane_widget2 = None
+            self.dual_mode = False
+            self.delete_between.setEnabled(False)
             self.mapper.SetInputData(self.original_polydata)
             self.vtk_widget.GetRenderWindow().Render()
 
@@ -262,9 +275,14 @@ class CTSTLEditor(QMainWindow):
         appender.Update()
         self.original_polydata = appender.GetOutput()
         self.mapper.SetInputData(self.original_polydata)
-        if self.plane_widget: self.plane_widget.Off()
-        if self.plane_widget2: self.plane_widget2.Off()
-        self.dual_mode = False; self.delete_between.setEnabled(False)
+        if self.plane_widget:
+            self.plane_widget.Off()
+            self.plane_widget = None
+        if self.plane_widget2:
+            self.plane_widget2.Off()
+            self.plane_widget2 = None
+        self.dual_mode = False
+        self.delete_between.setEnabled(False)
         self.vtk_widget.GetRenderWindow().Render()
 
     def export_stl(self):
