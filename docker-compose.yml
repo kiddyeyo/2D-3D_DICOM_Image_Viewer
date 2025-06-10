@@ -3,13 +3,11 @@ services:
     container_name: pycad-api
     build: .
     ports:
-      - "8501:8501"          # expone tu API en localhost:8501
+      - "8501:8501"         
     networks:
       - infraestructura_app-network
     restart: unless-stopped
     environment:
-      - FLASK_ENV=production
-      - PYTHONUNBUFFERED=1
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ctscan.rule=Host(`ctscan.sintaq.net`)"
@@ -18,8 +16,6 @@ services:
       - "traefik.http.routers.ctscan.tls.certresolver=cloudflare"
       - "traefik.http.services.ctscan.loadbalancer.server.port=8501"
     volumes:
-      - ./static:/app/static # monta la carpeta static para resultados
-      - ./.streamlit:/root/.streamlit
 networks:
   infraestructura_app-network:
     external: true

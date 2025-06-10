@@ -1,7 +1,1 @@
-streamlit
-numpy
-pydicom
-nibabel
-scikit-image
-plotly
-vtk
+
