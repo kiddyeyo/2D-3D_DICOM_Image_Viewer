@@ -105,16 +105,3 @@ pip install PyQt5 matplotlib numpy pydicom nibabel scikit-image vtk
 - El código está pensado para proyectos académicos, médicos, de ingeniería inversa, etc. ¡Aporta tus mejoras!
 
 ---
-
-## Créditos
-
-- [VTK](https://vtk.org/), [PyQt5](https://riverbankcomputing.com/software/pyqt/intro), [matplotlib](https://matplotlib.org/), [scikit-image](https://scikit-image.org/), [pydicom](https://pydicom.github.io/), [nibabel](https://nipy.org/nibabel/)
-
----
-
-## Licencia
-
-Este proyecto es de uso libre para fines educativos y de investigación.  
-Considera citar si lo usas en publicaciones o proyectos derivados.
-
----
