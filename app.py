@@ -162,10 +162,10 @@ class CTSTLEditor(QMainWindow):
         self.slice_slider.setValue(vol.shape[self.axis]//2)
         self.wc_slider.setRange(int(vmin),int(vmax)); self.wc_slider.setValue(int(center))
         self.ww_slider.setRange(1,int(width)); self.ww_slider.setValue(int(width))
-        self.thr_min.setRange(int(vmin), int(vmax))
-        self.thr_max.setRange(int(vmin), int(vmax))
-        self.thr_min.setValue(int(vmin))
-        self.thr_max.setValue(int(vmax))
+        self.thr_min.setRange(-3000, 3000)
+        self.thr_max.setRange(-3000, 3000)
+        self.thr_min.setValue(max(int(vmin), -3000))
+        self.thr_max.setValue(min(int(vmax), 3000))
         self.update_image()
 
     def change_orientation(self, index):
