@@ -160,8 +160,11 @@ class CTSTLEditor(QMainWindow):
         # configure sliders
         self.slice_slider.setRange(0, vol.shape[self.axis]-1)
         self.slice_slider.setValue(vol.shape[self.axis]//2)
-        self.wc_slider.setRange(int(vmin),int(vmax)); self.wc_slider.setValue(int(center))
-        self.ww_slider.setRange(1,int(width)); self.ww_slider.setValue(int(width))
+        # allow full HU range for personalized adjustments
+        self.wc_slider.setRange(-3000, 3000)
+        self.wc_slider.setValue(int(np.clip(center, -3000, 3000)))
+        self.ww_slider.setRange(1, 6000)
+        self.ww_slider.setValue(int(min(width, 6000)))
         self.thr_min.setRange(-3000, 3000)
         self.thr_max.setRange(-3000, 3000)
         self.thr_min.setValue(max(int(vmin), -3000))
