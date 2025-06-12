@@ -63,7 +63,7 @@ pip install PyQt5 matplotlib numpy pydicom nibabel scikit-image vtk
     ```
 
 2. **Carga un estudio CT** (botón `Cargar DICOM/NIfTI`):
-    - Selecciona una carpeta con archivos DICOM (`.dcm`) **o** un archivo NIfTI (`.nii` o `.nii.gz`).
+    - Elige un archivo NIfTI (`.nii`/`.nii.gz`) o selecciona una carpeta con archivos DICOM (`.dcm`).
 
 3. **Navega y explora el volumen en 2D**:
     - Cambia la orientación (Axial/Coronal/Sagital).
