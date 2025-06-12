@@ -7,7 +7,8 @@ import nibabel as nib
 from skimage.measure import marching_cubes
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QSlider, QLabel, QFileDialog, QMessageBox, QComboBox
+    QPushButton, QSlider, QLabel, QFileDialog, QMessageBox, QComboBox,
+    QSpinBox
 )
 from PyQt5.QtCore import Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -72,11 +73,16 @@ class CTSTLEditor(QMainWindow):
         self.ww_slider.valueChanged.connect(self.update_image)
         ctrl_layout.addWidget(QLabel("Window Width"))
         ctrl_layout.addWidget(self.ww_slider)
-        # Threshold slider
-        self.thr_slider = QSlider(Qt.Horizontal)
-        self.thr_slider.valueChanged.connect(self.update_image)
+        # Threshold range inputs
         ctrl_layout.addWidget(QLabel("Threshold"))
-        ctrl_layout.addWidget(self.thr_slider)
+        thr_layout = QHBoxLayout()
+        self.thr_min = QSpinBox()
+        self.thr_min.valueChanged.connect(self.update_image)
+        thr_layout.addWidget(self.thr_min)
+        self.thr_max = QSpinBox()
+        self.thr_max.valueChanged.connect(self.update_image)
+        thr_layout.addWidget(self.thr_max)
+        ctrl_layout.addLayout(thr_layout)
         # Generate STL
         stl_btn = QPushButton("Generate STL")
         stl_btn.clicked.connect(self.generate_stl)
@@ -156,7 +162,10 @@ class CTSTLEditor(QMainWindow):
         self.slice_slider.setValue(vol.shape[self.axis]//2)
         self.wc_slider.setRange(int(vmin),int(vmax)); self.wc_slider.setValue(int(center))
         self.ww_slider.setRange(1,int(width)); self.ww_slider.setValue(int(width))
-        self.thr_slider.setRange(int(vmin),int(vmax)); self.thr_slider.setValue(int(center))
+        self.thr_min.setRange(int(vmin), int(vmax))
+        self.thr_max.setRange(int(vmin), int(vmax))
+        self.thr_min.setValue(int(vmin))
+        self.thr_max.setValue(int(vmax))
         self.update_image()
 
     def change_orientation(self, index):
@@ -177,15 +186,22 @@ class CTSTLEditor(QMainWindow):
         mn = c - w/2; mx = c + w/2
         imgw = np.clip(img, mn, mx)
         disp = ((imgw - mn)/w*255).astype(np.uint8)
-        thr = self.thr_slider.value()
-        mask = img > thr
+        tmin = self.thr_min.value()
+        tmax = self.thr_max.value()
+        if tmin > tmax:
+            tmin, tmax = tmax, tmin
+        mask = (img >= tmin) & (img <= tmax)
         self.ax.clear(); self.ax.imshow(disp,cmap='gray')
         self.ax.imshow(np.ma.masked_where(~mask,mask),cmap='jet',alpha=0.3)
         self.ax.axis('off'); self.canvas.draw()
 
     def generate_stl(self):
         if self.volume is None: return
-        mask = (self.volume > self.thr_slider.value()).astype(np.uint8)
+        tmin = self.thr_min.value()
+        tmax = self.thr_max.value()
+        if tmin > tmax:
+            tmin, tmax = tmax, tmin
+        mask = ((self.volume >= tmin) & (self.volume <= tmax)).astype(np.uint8)
         verts, faces, _, _ = marching_cubes(mask, level=0)
         # Build VTK PolyData
         poly = vtk.vtkPolyData()
