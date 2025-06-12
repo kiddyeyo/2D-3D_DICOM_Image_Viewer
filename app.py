@@ -74,6 +74,7 @@ class CTSTLEditor(QMainWindow):
         ctrl_layout.addWidget(self.ww_slider)
         # Threshold slider
         self.thr_slider = QSlider(Qt.Horizontal)
+        self.thr_slider.valueChanged.connect(self.update_image)
         ctrl_layout.addWidget(QLabel("Threshold"))
         ctrl_layout.addWidget(self.thr_slider)
         # Generate STL
@@ -128,15 +129,22 @@ class CTSTLEditor(QMainWindow):
         self.resize(1400, 800)
 
     def load_volume(self):
-        path = QFileDialog.getExistingDirectory(self, "Select DICOM Folder or NIfTI File")
+        """Load a DICOM series or NIfTI volume."""
+        file, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select NIfTI or a DICOM file",
+            filter="NIfTI (*.nii *.nii.gz);;DICOM (*.dcm)"
+        )
+        path = file or QFileDialog.getExistingDirectory(self, "Select DICOM Folder")
         if not path:
-            file, _ = QFileDialog.getOpenFileName(self, "Select NIfTI", filter="NIfTI (*.nii *.nii.gz)")
-            path = file or None
-        if not path: return
+            return
         if os.path.isdir(path):
             files = sorted(f for f in os.listdir(path) if f.lower().endswith('.dcm'))
+            if not files:
+                QMessageBox.warning(self, 'No DICOM', 'No DICOM files found in the selected folder.')
+                return
             slices = [pydicom.dcmread(os.path.join(path, f)) for f in files]
-            slices.sort(key=lambda s: float(getattr(s,'ImagePositionPatient',[0,0,0])[2]))
+            slices.sort(key=lambda s: float(getattr(s, 'ImagePositionPatient', [0, 0, 0])[2]))
             vol = np.stack([s.pixel_array for s in slices])
         else:
             vol = nib.load(path).get_fdata()
